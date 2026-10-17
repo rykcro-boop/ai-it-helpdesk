@@ -133,4 +133,4 @@ Try `"I think my PC has ransomware"` to see the rule engine raise the priority t
 
 **Jerry Musico**
 BS Information Technology (Networking and Systems), IETI College of Science and Technology
-GitHub: [your-username](https://github.com/your-username)
+GitHub: [your-username](https://github.com/rykcro-boop)
