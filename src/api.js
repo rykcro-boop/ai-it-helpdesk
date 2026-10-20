@@ -99,14 +99,24 @@ function nextTicketVersion(ticket) {
 }
 
 function mockAccountFor(token) {
-  return Object.values(MOCK_ACCOUNTS).find((account) => account.token === token)
+  const mockAccount = Object.values(MOCK_ACCOUNTS).find((account) => account.token === token)
+  if (mockAccount) return mockAccount
+  try {
+    const session = JSON.parse(sessionStorage.getItem('ai-helpdesk-session') || 'null')
+    if (session?.token === token && ['Employee', 'Technician'].includes(session.role)) {
+      return { ...session, liveSession: true }
+    }
+  } catch {
+    return undefined
+  }
+  return undefined
 }
 
 function assertRole(token, role) {
   const account = mockAccountFor(token)
   if (!account) fail('Session expired', 'UNAUTHORIZED', 401)
   const user = mockUsers.find((item) => item.username === account.username)
-  if (!user || user.status === 'Disabled') fail('Account disabled. Contact a technician.', 'FORBIDDEN', 403)
+  if (!account.liveSession && (!user || user.status === 'Disabled')) fail('Account disabled. Contact a technician.', 'FORBIDDEN', 403)
   if (role && account.role !== role) fail('You do not have permission to perform this action.', 'FORBIDDEN', 403)
   return account
 }
@@ -125,8 +135,12 @@ async function request(path, token, { method = 'GET', body, timeoutMs } = {}) {
       headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) },
       ...(body ? { body: JSON.stringify(body) } : {}),
     })
+    const responseText = await response.text()
     let data = null
-    try { data = await response.json() } catch { data = null }
+    try { data = responseText ? JSON.parse(responseText) : null } catch {
+      const message = responseText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+      data = message ? { message } : null
+    }
     if (response.status === 401) {
       throw new ApiError(data?.error || data?.message || 'Unauthorized', 401, 'UNAUTHORIZED')
     }
@@ -189,7 +203,7 @@ export async function getMyTickets(token) {
   return normalizeList(await request('helpdesk-my-tickets', token))
 }
 
-export async function createTicket(token, description) {
+export async function createTicket(token, description, requester = '') {
   const cleanDescription = cleanText(description, 2000)
   if (cleanDescription.length < 10 || !/[A-Za-z]/.test(cleanDescription)) fail('Describe the issue in at least 10 characters using more than punctuation or digits.')
   if (!LIVE.ticket) {
@@ -214,7 +228,7 @@ export async function createTicket(token, description) {
     mockTickets = [created, ...mockTickets]
     return created
   }
-  return request('helpdesk-ticket', token, { method: 'POST', body: { description: cleanDescription }, timeoutMs: 180_000 })
+  return request('helpdesk-ticket', token, { method: 'POST', body: { requester: cleanText(requester, 100), description: cleanDescription }, timeoutMs: 180_000 })
 }
 
 export async function getAllTickets(token) {

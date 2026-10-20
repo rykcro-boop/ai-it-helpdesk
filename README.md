@@ -12,6 +12,7 @@ A fully local IT help desk that takes support tickets, classifies them with a lo
 - **Resolution tracking**: update a ticket to In Progress, Resolved, or Closed and record the fix.
 - **Dashboard** with stats, filters, search, and expandable ticket details.
 - **Training lab** with simulated remote-support sessions for common helpdesk scenarios. Practice safe troubleshooting, user verification, and fix confirmation without connecting to a real device.
+- **Fictional Active Directory console** with sample users, computers, groups, simulated account unlocks, and a read-only remote workstation training session. It does not connect to a real domain or endpoint.
 
 ## Architecture
 
@@ -102,7 +103,7 @@ The Vite dev server proxies `/n8n` to `http://localhost:5678`, so the browser ne
 const API = "/n8n/webhook"; // use "/n8n/webhook-test" while testing in n8n
 ```
 
-Sign in with the technician demo account (`tech1` / `demo1234`) and open **Training lab** in the sidebar to practice simulated Wi-Fi, printer, and account-access support sessions. The remote desktop is a visual training simulation only; it does not connect to or change real computers.
+Sign in with the technician demo account (`tech1` / `demo1234`) and open **Training lab** in the sidebar to practice simulated Wi-Fi, printer, and account-access support sessions. Open **Active Directory** for fictional directory records and a simulated remote workstation console. These training tools do not connect to or change real computers or domain services.
 
 ## Testing from PowerShell
 

@@ -14,7 +14,7 @@ function cleanDescriptionText(value) {
   }).join('')
 }
 
-export function NewTicket({ token, onSessionExpired }) {
+export function NewTicket({ token, requester, onSessionExpired }) {
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -27,7 +27,7 @@ export function NewTicket({ token, onSessionExpired }) {
     if (cleanDescription.length < 10) { setError('Describe the issue in at least 10 characters.'); return }
     if (!/[A-Za-z]/.test(cleanDescription)) { setError('Describe the issue using words, not only punctuation or digits.'); return }
     setLoading(true)
-    try { setResult(await createTicket(token, cleanDescription)); setDescription('') }
+    try { setResult(await createTicket(token, cleanDescription, requester)); setDescription('') }
     catch (err) {
       if (err instanceof ApiError && err.code === 'UNAUTHORIZED') { onSessionExpired(); return }
       setError(err.message || UNREACHABLE_MESSAGE)
