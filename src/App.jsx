@@ -4,6 +4,7 @@ import { Login } from './Login.jsx'
 import { ChangePassword } from './ChangePassword.jsx'
 import { NewTicket } from './NewTicket.jsx'
 import { Layout } from './Layout.jsx'
+import { PracticeLab } from './PracticeLab.jsx'
 import { Reports } from './Reports.jsx'
 import { TicketDetail } from './TicketDetail.jsx'
 import { TicketList } from './TicketList.jsx'
@@ -71,6 +72,7 @@ function App() {
   const isTechnician = session.role === 'Technician'
   const title = page === 'tickets' || page === 'ticket-detail' ? 'Service Desk — Incidents'
     : page === 'reports' ? 'Reports'
+      : page === 'practice' ? 'Training Lab'
       : page === 'users' ? 'User Management'
         : page === 'my-tickets' ? 'My tickets' : 'New ticket'
   const headerAction = page === 'users'
@@ -83,6 +85,7 @@ function App() {
     {page === 'tickets' && <TicketList token={session.token} technician={session.name} isTechnician onSessionExpired={onSessionExpired} onOpen={openTicket} notice={ticketNotice} onClearNotice={() => setTicketNotice('')} />}
     {page === 'ticket-detail' && selectedTicket && <TicketDetail ticket={selectedTicket} token={session.token} technician={session.name} isTechnician={isTechnician} onSessionExpired={onSessionExpired} onBack={() => setPage(isTechnician ? 'tickets' : 'my-tickets')} onMissingTicket={onTicketMissing} />}
     {page === 'reports' && isTechnician && <Reports token={session.token} onSessionExpired={onSessionExpired} />}
+    {page === 'practice' && isTechnician && <PracticeLab technician={session.name} />}
     {page === 'users' && isTechnician && <Users token={session.token} session={session} onSessionExpired={onSessionExpired} openCreateSignal={createUserSignal} />}
     {page === 'my-tickets' && !isTechnician && <TicketList token={session.token} isTechnician={false} onSessionExpired={onSessionExpired} onOpen={openTicket} notice={ticketNotice} onClearNotice={() => setTicketNotice('')} />}
     {page === 'new-ticket' && !isTechnician && <NewTicket token={session.token} onSessionExpired={onSessionExpired} />}

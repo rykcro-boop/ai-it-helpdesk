@@ -5,6 +5,7 @@ const ICONS = {
   reports: <><path d="M5 19V9m7 10V5m7 14v-7" /><path d="M3 19h18" /></>,
   users: <><circle cx="9" cy="8" r="3" /><path d="M3 19v-1a6 6 0 0 1 12 0v1M16 5.5a3 3 0 0 1 0 5.8M18 14a5 5 0 0 1 3 4v1" /></>,
   add: <><path d="M12 5v14M5 12h14" /></>,
+  practice: <><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4m-5-12 2 2 4-4" /></>,
 }
 
 function NavIcon({ name }) {
@@ -15,7 +16,7 @@ export function Layout({ session, page, setPage, onLogout, title, tabs, activeTa
   const [menuOpen, setMenuOpen] = useState(false)
   const technician = session.role === 'Technician'
   const items = technician
-    ? [{ id: 'tickets', label: 'Tickets', icon: 'tickets' }, { id: 'reports', label: 'Reports', icon: 'reports' }]
+    ? [{ id: 'tickets', label: 'Tickets', icon: 'tickets' }, { id: 'practice', label: 'Training lab', icon: 'practice' }, { id: 'reports', label: 'Reports', icon: 'reports' }]
     : [{ id: 'my-tickets', label: 'My tickets', icon: 'tickets' }, { id: 'new-ticket', label: 'New ticket', icon: 'add' }]
 
   function navigate(id) {

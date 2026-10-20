@@ -1,5 +1,5 @@
 const API = "/n8n/webhook";
-const USE_MOCK = true;
+const LIVE = { login: true, list: true, myTickets: true, ticket: true, assign: false, update: false, reports: false, users: false, userCreate: false, userUpdate: false, changePassword: false };
 
 export const UNREACHABLE_MESSAGE = 'Cannot reach n8n. Check that n8n is running and the workflow is published.'
 export const TIMEOUT_MESSAGE = 'The request timed out. Please try again.'
@@ -127,7 +127,7 @@ async function request(path, token, { method = 'GET', body, timeoutMs } = {}) {
     })
     let data = null
     try { data = await response.json() } catch { data = null }
-    if (response.status === 401 || ['UNAUTHORIZED', 'Unauthorized', 'Session expired'].includes(data?.code || data?.error)) {
+    if (response.status === 401) {
       throw new ApiError(data?.error || data?.message || 'Unauthorized', 401, 'UNAUTHORIZED')
     }
     if (!response.ok || data?.error) {
@@ -146,7 +146,7 @@ async function request(path, token, { method = 'GET', body, timeoutMs } = {}) {
 
 export async function login(username, password) {
   const normalized = cleanText(username, 20).toLowerCase()
-  if (USE_MOCK) {
+  if (!LIVE.login) {
     const attempt = failedLogins.get(normalized)
     if (attempt?.lockedUntil > Date.now()) fail('Invalid username or password', 'UNAUTHORIZED', 401)
     await new Promise((resolve) => window.setTimeout(resolve, 180))
@@ -171,7 +171,7 @@ export async function login(username, password) {
 export async function changePassword(token, currentPassword, newPassword) {
   if (newPassword === currentPassword) fail('Your new password must be different from the current password.')
   if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) fail('Use at least 8 characters, including a letter and a digit.')
-  if (USE_MOCK) {
+  if (!LIVE.changePassword) {
     const account = assertRole(token)
     if (account.password !== currentPassword) fail('Current password is incorrect.')
     account.password = newPassword
@@ -182,7 +182,7 @@ export async function changePassword(token, currentPassword, newPassword) {
 }
 
 export async function getMyTickets(token) {
-  if (USE_MOCK) {
+  if (!LIVE.myTickets) {
     const account = assertRole(token, 'Employee')
     return normalizeList(mockTickets.filter((ticket) => ticket.requester_username === account.username))
   }
@@ -192,7 +192,7 @@ export async function getMyTickets(token) {
 export async function createTicket(token, description) {
   const cleanDescription = cleanText(description, 2000)
   if (cleanDescription.length < 10 || !/[A-Za-z]/.test(cleanDescription)) fail('Describe the issue in at least 10 characters using more than punctuation or digits.')
-  if (USE_MOCK) {
+  if (!LIVE.ticket) {
     const account = assertRole(token, 'Employee')
     if (mockTickets.some((ticket) => ticket.requester_username === account.username && ticket.description === cleanDescription && Date.now() - new Date(ticket.created_at).getTime() < 60_000)) fail('An identical ticket was submitted within the last 60 seconds.')
     const current = mockTickets.filter((ticket) => ticket.requester_username === account.username && !['Resolved', 'Closed'].includes(ticket.status)).length
@@ -218,7 +218,7 @@ export async function createTicket(token, description) {
 }
 
 export async function getAllTickets(token) {
-  if (USE_MOCK) { assertRole(token, 'Technician'); return normalizeList(mockTickets) }
+  if (!LIVE.list) { assertRole(token, 'Technician'); return normalizeList(mockTickets) }
   return normalizeList(await request('helpdesk-list', token))
 }
 
@@ -241,7 +241,7 @@ function addEvent(ticket, account, action, detail, now) {
 }
 
 export async function assignTicket(token, ticketId, action, expectedUpdatedAt, options = {}) {
-  if (!USE_MOCK) return request('helpdesk-assign', token, { method: 'POST', body: { ticket_id: ticketId, action, expected_updated_at: expectedUpdatedAt, ...options } })
+  if (LIVE.assign) return request('helpdesk-assign', token, { method: 'POST', body: { ticket_id: ticketId, action, expected_updated_at: expectedUpdatedAt, ...options } })
   const account = assertRole(token, 'Technician')
   const ticket = findTicket(ticketId)
   checkVersion(ticket, expectedUpdatedAt)
@@ -280,7 +280,7 @@ function validResolutionNotes(notes) {
 
 export async function updateTicket(token, ticketId, payload) {
   const body = typeof payload === 'string' ? { status: payload } : payload
-  if (!USE_MOCK) return request('helpdesk-update', token, { method: 'POST', body: { ticket_id: ticketId, ...body } })
+  if (LIVE.update) return request('helpdesk-update', token, { method: 'POST', body: { ticket_id: ticketId, ...body } })
   const account = assertRole(token, 'Technician')
   const ticket = findTicket(ticketId)
   checkVersion(ticket, body.expected_updated_at)
@@ -342,7 +342,6 @@ export async function updateTicket(token, ticketId, payload) {
 }
 
 export async function saveTicketDraft(token, ticketId, notes, expectedUpdatedAt) {
-  if (!USE_MOCK) return { success: true }
   const account = assertRole(token, 'Technician')
   const ticket = findTicket(ticketId)
   checkVersion(ticket, expectedUpdatedAt)
@@ -353,12 +352,12 @@ export async function saveTicketDraft(token, ticketId, notes, expectedUpdatedAt)
 }
 
 export async function getReports(token) {
-  if (USE_MOCK) { assertRole(token, 'Technician'); return normalizeList(mockReports) }
+  if (!LIVE.reports) { assertRole(token, 'Technician'); return normalizeList(mockReports) }
   return normalizeList(await request('helpdesk-reports', token))
 }
 
 export async function getUsers(token) {
-  if (USE_MOCK) { assertRole(token, 'Technician'); return mockUsers.map(({ name, username, email, department, role, status, created_at }) => ({ name, username, email, department, role, status, created_at })) }
+  if (!LIVE.users) { assertRole(token, 'Technician'); return mockUsers.map(({ name, username, email, department, role, status, created_at }) => ({ name, username, email, department, role, status, created_at })) }
   return normalizeList(await request('helpdesk-users', token))
 }
 
@@ -380,7 +379,7 @@ function validateUser(user) {
 }
 
 export async function createUser(token, user) {
-  if (!USE_MOCK) return request('helpdesk-user-create', token, { method: 'POST', body: user })
+  if (LIVE.userCreate) return request('helpdesk-user-create', token, { method: 'POST', body: user })
   assertRole(token, 'Technician')
   const clean = validateUser(user)
   const created = { name: clean.name, username: clean.username, email: clean.email, department: clean.department, role: clean.role, status: 'Active', created_at: new Date().toISOString() }
@@ -390,7 +389,7 @@ export async function createUser(token, user) {
 }
 
 export async function updateUser(token, username, action, newPassword, options = {}) {
-  if (!USE_MOCK) return request('helpdesk-user-update', token, { method: 'POST', body: { username, action, ...(newPassword ? { new_password: newPassword } : {}), ...(options.confirmed ? { confirmed: true } : {}) } })
+  if (LIVE.userUpdate) return request('helpdesk-user-update', token, { method: 'POST', body: { username, action, ...(newPassword ? { new_password: newPassword } : {}), ...(options.confirmed ? { confirmed: true } : {}) } })
   const currentAccount = assertRole(token, 'Technician')
   const user = mockUsers.find((item) => item.username === username)
   if (!user) fail('User not found', 'NOT_FOUND', 404)
