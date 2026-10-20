@@ -34,20 +34,48 @@ function validReports(reports) {
 function DailyChart({ reports }) {
   const recent = validReports(reports)
   const maxValue = Math.max(1, ...recent.flatMap((report) => [numberValue(report.new_today), numberValue(report.resolved)]))
+  const plotWidth = 652
+  const plotBottom = 150
+  const plotHeight = 118
+  const pointsFor = (field) => recent.map((report, index) => {
+    const x = 24 + (recent.length === 1 ? plotWidth / 2 : (index / (recent.length - 1)) * plotWidth)
+    const y = plotBottom - (numberValue(report[field]) / maxValue) * plotHeight
+    return { x, y }
+  })
+  const newPoints = pointsFor('new_today')
+  const resolvedPoints = pointsFor('resolved')
+  const linePath = (points) => points.map(({ x, y }, index) => `${index === 0 ? 'M' : 'L'} ${x} ${y}`).join(' ')
+  const areaPath = (points) => points.length
+    ? `${linePath(points)} L ${points[points.length - 1].x} ${plotBottom} L ${points[0].x} ${plotBottom} Z`
+    : ''
+  const resolvedLine = linePath(resolvedPoints)
+  const resolvedArea = areaPath(resolvedPoints)
+
   return <>
     {recent.length ? <>
-      <div className="chart" role="img" aria-label="Bar chart comparing new tickets and resolved tickets for up to the last 7 valid report dates">
-        {recent.map((report) => {
-          const newCount = numberValue(report.new_today)
-          const resolvedCount = numberValue(report.resolved)
-          return <div className="chart-column" key={report.report_date} title={`${formatReportDate(report.report_date)}: ${newCount} new, ${resolvedCount} resolved`}>
-            <div className="chart-bars">
-              <span className="chart-bar" style={{ height: `${Math.max(3, (newCount / maxValue) * 100)}%` }} />
-              <span className="chart-bar resolved" style={{ height: `${Math.max(3, (resolvedCount / maxValue) * 100)}%` }} />
-            </div>
-            <span className="chart-label">{new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' }).format(parseReportDate(report.report_date))}</span>
-          </div>
-        })}
+      <div className="chart-frame">
+        <svg className="chart" viewBox="0 0 700 180" role="img" aria-label="Animated water-style area chart comparing new tickets and resolved tickets for up to the last 7 report dates">
+          <defs>
+            <linearGradient id="resolved-water" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#61c89a" stopOpacity=".48" />
+              <stop offset="100%" stopColor="#61c89a" stopOpacity=".06" />
+            </linearGradient>
+            <clipPath id="resolved-water-clip"><path d={resolvedArea} /></clipPath>
+          </defs>
+          {[32, 70, 108, 150].map((y) => <line key={y} x1="24" x2="676" y1={y} y2={y} className="chart-grid-line" />)}
+          <path d={resolvedArea} fill="url(#resolved-water)" />
+          <g clipPath="url(#resolved-water-clip)" className="chart-water-motion">
+            <path d="M0 117 C65 99 130 135 195 117 S325 99 390 117 S520 135 585 117 S715 99 780 117 V180 H0 Z" />
+            <path className="chart-water-ripple" d="M0 126 C65 108 130 144 195 126 S325 108 390 126 S520 144 585 126 S715 108 780 126 V180 H0 Z" />
+          </g>
+          <path d={linePath(newPoints)} className="chart-line chart-line-new" />
+          <path d={resolvedLine} className="chart-line chart-line-resolved" />
+          {newPoints.map(({ x, y }, index) => <circle key={`new-${recent[index].report_date}`} cx={x} cy={y} r="3.5" className="chart-point chart-point-new" />)}
+          {resolvedPoints.map(({ x, y }, index) => <circle key={`resolved-${recent[index].report_date}`} cx={x} cy={y} r="3.5" className="chart-point chart-point-resolved" />)}
+        </svg>
+        <div className="chart-dates" style={{ gridTemplateColumns: `repeat(${recent.length}, minmax(0, 1fr))` }}>
+          {recent.map((report) => <span className="chart-label" key={report.report_date}>{new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' }).format(parseReportDate(report.report_date))}</span>)}
+        </div>
       </div>
       <div className="chart-legend"><span className="legend-item"><i className="legend-dot" />New today</span><span className="legend-item"><i className="legend-dot resolved" />Resolved</span></div>
     </> : <div className="empty-state report-chart-empty">No reports with valid dates to chart.</div>}

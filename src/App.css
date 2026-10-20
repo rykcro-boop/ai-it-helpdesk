@@ -16,7 +16,13 @@
 html, body, #root { min-height: 100%; margin: 0; }
 body { min-width: 320px; background: #f3f6fa; }
 button, input, textarea, select { font: inherit; }
-button { cursor: pointer; }
+button {
+  cursor: pointer;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(0) scale(.98); }
+button:focus-visible { outline: 3px solid #4d87e64d; outline-offset: 2px; }
 button:disabled { cursor: not-allowed; opacity: .58; }
 h1, h2, h3, p { margin-top: 0; }
 h1, h2, h3 { color: #1e2e43; }
@@ -61,7 +67,7 @@ h1, h2, h3 { color: #1e2e43; }
 .section-tabs button.selected { border-bottom-color: var(--blue); color: #245dbd; }
 .mobile-topbar { display: none; }
 
-.button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid transparent; border-radius: 6px; font-size: 11px; font-weight: 700; transition: background .15s, border-color .15s; white-space: nowrap; }
+.button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid transparent; border-radius: 6px; font-size: 11px; font-weight: 700; transition: transform .18s ease, filter .18s ease, box-shadow .18s ease, background .15s, border-color .15s; white-space: nowrap; }
 
 .launch-checklist-page {
   padding: 0;
@@ -349,17 +355,34 @@ h1, h2, h3 { color: #1e2e43; }
 .report-table { min-width: 950px; width: 100%; border-collapse: collapse; font-size: 10px; }
 .report-table th { padding: 10px; background: #f7f9fc; color: #758399; text-align: left; font-size: 9px; }
 .report-table td { padding: 10px; border-top: 1px solid #edf0f4; color: #4c5e75; }
-.chart { display: flex; height: 170px; justify-content: space-around; gap: 9px; padding: 10px 6px 0; border-bottom: 1px solid #e2e8f0; }
-.chart-column { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; align-items: center; gap: 8px; }
-.chart-bars { display: flex; width: 100%; height: 130px; align-items: flex-end; justify-content: center; gap: 5px; }
-.chart-bar { width: min(24px, 35%); min-height: 3px; border-radius: 4px 4px 0 0; background: #4381df; }
-.chart-bar.resolved { background: #64ba8a; }
+.chart-frame { position: relative; overflow: hidden; border-bottom: 1px solid #e2e8f0; border-radius: 8px 8px 0 0; background: linear-gradient(180deg, #f8fbff, #fff); }
+.chart { display: block; width: 100%; height: 180px; overflow: visible; }
+.chart-grid-line { stroke: #e9eef5; stroke-width: 1; }
+.chart-line { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
+.chart-line-new { stroke: #4381df; }
+.chart-line-resolved { stroke: #49a979; }
+.chart-point { stroke: white; stroke-width: 2; }
+.chart-point-new { fill: #4381df; }
+.chart-point-resolved { fill: #49a979; }
+.chart-water-motion path { fill: url(#resolved-water); animation: chart-water-drift 8s linear infinite; }
+.chart-water-motion .chart-water-ripple { opacity: .75; animation-duration: 11s; animation-direction: reverse; }
+@keyframes chart-water-drift { from { transform: translateX(0); } to { transform: translateX(-130px); } }
+.chart-dates { display: grid; justify-items: center; gap: 5px; padding: 0 3.4%; }
 .chart-label { color: #7c899a; font-size: 9px; }
 .chart-legend { display: flex; justify-content: center; gap: 17px; margin-top: 13px; }
 .legend-item { display: flex; align-items: center; gap: 6px; color: #758399; font-size: 9px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; background: #4381df; }
 .legend-dot.resolved { background: #64ba8a; }
 .report-top-category { color: #77869a; font-size: 9px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
 
 .directory-page { display: grid; gap: 16px; }
 .directory-banner { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 25px; border: 1px solid #dce6f3; border-radius: 9px; background: linear-gradient(110deg, #fff, #f1f6ff); }
