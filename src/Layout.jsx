@@ -7,6 +7,7 @@ const ICONS = {
   add: <><path d="M12 5v14M5 12h14" /></>,
   practice: <><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4m-5-12 2 2 4-4" /></>,
   directory: <><circle cx="9" cy="8" r="3" /><path d="M3 19v-1a6 6 0 0 1 12 0v1m2-11h4m-2-2v4m-2 7h4m-2-2v4" /></>,
+  checklist: <><path d="M8 6.4h10M8 12h10M8 17.6h10" /><path d="M4 6.4l1.1 1.1 2.1-2.4M4 12l1.1 1.1 2.1-2.4M4 17.6l1.1 1.1 2.1-2.4" /></>,
 }
 
 function NavIcon({ name }) {
@@ -17,7 +18,7 @@ export function Layout({ session, page, setPage, onLogout, title, tabs, activeTa
   const [menuOpen, setMenuOpen] = useState(false)
   const technician = session.role === 'Technician'
   const items = technician
-    ? [{ id: 'tickets', label: 'Tickets', icon: 'tickets' }, { id: 'directory', label: 'Active Directory', icon: 'directory' }, { id: 'practice', label: 'Training lab', icon: 'practice' }, { id: 'reports', label: 'Reports', icon: 'reports' }]
+    ? [{ id: 'tickets', label: 'Tickets', icon: 'tickets' }, { id: 'directory', label: 'Active Directory', icon: 'directory' }, { id: 'practice', label: 'Training lab', icon: 'practice' }, { id: 'reports', label: 'Reports', icon: 'reports' }, { id: 'launch-checklist', label: 'Launch checklist', icon: 'checklist' }]
     : [{ id: 'my-tickets', label: 'My tickets', icon: 'tickets' }, { id: 'new-ticket', label: 'New ticket', icon: 'add' }]
 
   function navigate(id) {

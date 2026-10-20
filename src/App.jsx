@@ -7,6 +7,7 @@ import { Layout } from './Layout.jsx'
 import { PracticeLab } from './PracticeLab.jsx'
 import { ActiveDirectory } from './ActiveDirectory.jsx'
 import { Reports } from './Reports.jsx'
+import { LaunchChecklist } from './LaunchChecklist.jsx'
 import { TicketDetail } from './TicketDetail.jsx'
 import { TicketList } from './TicketList.jsx'
 import { Users } from './Users.jsx'
@@ -76,7 +77,8 @@ function App() {
       : page === 'practice' ? 'Training Lab'
       : page === 'directory' ? 'Active Directory'
       : page === 'users' ? 'User Management'
-        : page === 'my-tickets' ? 'My tickets' : 'New ticket'
+        : page === 'launch-checklist' ? 'Launch Checklist'
+          : page === 'my-tickets' ? 'My tickets' : 'New ticket'
   const headerAction = page === 'users'
     ? <button className="button button-primary" type="button" onClick={() => setCreateUserSignal((value) => value + 1)}>+ Create User</button>
     : page === 'my-tickets'
@@ -87,6 +89,7 @@ function App() {
     {page === 'tickets' && <TicketList token={session.token} technician={session.name} isTechnician onSessionExpired={onSessionExpired} onOpen={openTicket} notice={ticketNotice} onClearNotice={() => setTicketNotice('')} />}
     {page === 'ticket-detail' && selectedTicket && <TicketDetail ticket={selectedTicket} token={session.token} technician={session.name} isTechnician={isTechnician} onSessionExpired={onSessionExpired} onBack={() => setPage(isTechnician ? 'tickets' : 'my-tickets')} onMissingTicket={onTicketMissing} />}
     {page === 'reports' && isTechnician && <Reports token={session.token} onSessionExpired={onSessionExpired} />}
+    {page === 'launch-checklist' && isTechnician && <LaunchChecklist />}
     {page === 'practice' && isTechnician && <PracticeLab technician={session.name} />}
     {page === 'directory' && isTechnician && <ActiveDirectory technician={session.name} />}
     {page === 'users' && isTechnician && <Users token={session.token} session={session} onSessionExpired={onSessionExpired} openCreateSignal={createUserSignal} />}
